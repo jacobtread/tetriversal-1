@@ -1,1 +1,2 @@
-tetrivercal
+# Tetrivercal
+A multiplayer tetris game.

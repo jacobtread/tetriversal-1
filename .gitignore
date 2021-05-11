@@ -1,0 +1,11 @@
+# Outputs
+/target
+/debug
+*.pdb
+# Lockfile
+Cargo.lock
+# rustfmt
+**/*.rs.bk
+#Ides
+.idea
+.vscode
