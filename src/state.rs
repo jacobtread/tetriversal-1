@@ -3,13 +3,13 @@ use opengl_graphics::GlGraphics;
 use piston::{RenderArgs, UpdateArgs};
 
 pub struct App {
-    gl: GlGraphics,
+    pub gl: GlGraphics,
     // OpenGL drawing backend.
-    grid: Vec<Vec<Tile>>,
+    pub grid: Vec<Vec<Tile>>,
 }
 
 impl App {
-    fn render(&mut self, args: &RenderArgs) {
+    pub fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
         let square = rectangle::square(0.0, 0.0, 25.0);
@@ -34,7 +34,7 @@ impl App {
         });
     }
 
-    fn update(&mut self, args: &UpdateArgs) {
+    pub fn update(&mut self, args: &UpdateArgs) {
         // Rotate 2 radians per second.
     }
 }

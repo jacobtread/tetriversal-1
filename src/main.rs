@@ -10,9 +10,11 @@ use futures::prelude::*;
 use glutin_window::GlutinWindow as Window;
 use log::{debug, error, info};
 use opengl_graphics::{GlGraphics, OpenGL};
+use packets::outgoing::OutgoingPackets;
 use piston::event_loop::{EventSettings, Events};
 use piston::input::{RenderEvent, UpdateEvent};
 use piston::window::WindowSettings;
+use state::App;
 use std::collections::VecDeque;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
@@ -30,11 +32,11 @@ async fn main() {
                 buf,
                 "[{}]: {}",
                 match record.level() {
-                    log::Level::Error => " ERROR ".red().bold(),
-                    log::Level::Warn => "WARNING".yellow().bold(),
-                    log::Level::Info => "  INFO ".green().bold(),
-                    log::Level::Debug => " DEBUG ".blue().bold(),
-                    log::Level::Trace => " TRACE ".white().bold(),
+                    log::Level::Error => "  ERROR  ".red().bold(),
+                    log::Level::Warn => " WARNING ".yellow().bold(),
+                    log::Level::Info => "  INFO   ".green().bold(),
+                    log::Level::Debug => "  DEBUG  ".blue().bold(),
+                    log::Level::Trace => "  TRACE  ".white().bold(),
                 },
                 record.args()
             )
@@ -51,7 +53,7 @@ async fn main() {
         .build()
         .unwrap();
 
-    let outgoing_queue: Arc<Mutex<VecDeque<Message>>> = Arc::new(Mutex::new(VecDeque::new()));
+    let outgoing_queue: Arc<Mutex<VecDeque<OutgoingPackets>>> = Arc::new(Mutex::new(VecDeque::new()));
 
     tokio::spawn(async move {
         info!("Connecting to websocket");
@@ -66,7 +68,7 @@ async fn main() {
 
         info!("Connected to websocket");
 
-        stream.send(Message::Text("Hentai".to_string()));
+        stream.send(Message::Text("Hentai".to_string())).await.unwrap();
         let msg = stream
             .next()
             .await
@@ -83,11 +85,11 @@ async fn main() {
             .map(|a| {
                 (1..13)
                     .map(|b| match (a * b) % 4 {
-                        0 => Tile::Empty,
-                        1 => Tile::Blue,
-                        2 => Tile::Green,
-                        3 => Tile::Red,
-                        _ => Tile::Empty,
+                        0 => util::Tile::Empty,
+                        1 => util::Tile::Blue,
+                        2 => util::Tile::Green,
+                        3 => util::Tile::Red,
+                        _ => util::Tile::Empty,
                     })
                     .collect()
             })
