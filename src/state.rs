@@ -1,14 +1,47 @@
 use crate::util::Tile;
 use opengl_graphics::GlGraphics;
 use piston::{RenderArgs, UpdateArgs};
+use futures::channel::mpsc::Sender;
+use crate::packets::outgoing::OutgoingPacket;
+use crate::util;
+use std::collections::VecDeque;
+use crate::packets::incoming::IncomingPacket;
+use futures_util::lock::Mutex;
+use std::sync::Arc;
+use log::{debug};
+use futures_util::SinkExt;
 
+#[allow(dead_code)]
 pub struct App {
     pub gl: GlGraphics,
     // OpenGL drawing backend.
     pub grid: Vec<Vec<Tile>>,
+    outgoing_stream: Sender<OutgoingPacket>,
+    incoming_queue: Arc<Mutex<VecDeque<IncomingPacket>>>
 }
 
 impl App {
+    pub async fn new(gl: GlGraphics, mut outgoing_stream: Sender<OutgoingPacket>, incoming_queue: Arc<Mutex<VecDeque<IncomingPacket>>>) -> Self {
+        outgoing_stream.send(OutgoingPacket::JoinRequestPacket {name: "Yes".to_string()}).await.unwrap();
+        Self {
+            gl,
+            grid: (2..22)
+                .map(|a| {
+                    (1..13)
+                        .map(|b| match (a * b) % 4 {
+                            0 => util::Tile::Empty,
+                            1 => util::Tile::Blue,
+                            2 => util::Tile::Green,
+                            3 => util::Tile::Red,
+                            _ => util::Tile::Empty,
+                        })
+                        .collect()
+                })
+                .collect(),
+            outgoing_stream,
+            incoming_queue
+        }
+    }
     pub fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
@@ -34,7 +67,18 @@ impl App {
         });
     }
 
-    pub fn update(&mut self, args: &UpdateArgs) {
-        // Rotate 2 radians per second.
+    pub async fn update(&mut self, _args: &UpdateArgs) {
+        // Get the message queue
+        let mut msg_queue = self.incoming_queue.lock().await;
+        let message_queue = msg_queue.clone();
+
+        // Empty the message queue
+        msg_queue.clear();
+        drop(msg_queue);
+
+        // Handle all of the messages
+        for a in message_queue.iter() {
+            debug!("{:?}", a);
+        }
     }
 }

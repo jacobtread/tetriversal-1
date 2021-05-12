@@ -4,19 +4,19 @@ extern crate opengl_graphics;
 extern crate piston;
 
 use glutin_window::GlutinWindow as Window;
-use log::{debug, error, info};
+use log::{info};
 use opengl_graphics::{GlGraphics, OpenGL};
-use packets::outgoing::OutgoingPackets;
 use piston::event_loop::{EventSettings, Events};
 use piston::window::WindowSettings;
 use state::App;
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use futures_util::lock::Mutex;
 use crate::util::logging::init_log;
 use piston::{RenderEvent, UpdateEvent};
 use crate::socket::create_socket;
 use futures::channel::mpsc::channel;
-use futures::{SinkExt, StreamExt};
+use crate::packets::incoming::IncomingPacket;
 
 pub mod packets;
 pub mod state;
@@ -25,18 +25,20 @@ pub mod socket;
 
 #[tokio::main]
 async fn main() {
+    // Initialize the logging system
     init_log();
-    let (mut out_tx, out_rx) = channel(1024);
-    let (in_tx, in_rx) = channel(1024);
-    tokio::spawn(create_socket(out_rx, in_tx));
 
-    out_tx.send(OutgoingPackets::JoinRequestPacket {
-        name: "no".to_string()
-    }).await;
+    info!("Launching game");
 
-    // in_rx.for_each(|e| async move {
-    //     info!("{}", e);
-    // }).await;
+    // Create streams to send packets to server
+    let (out_tx, out_rx) = channel(1024);
+
+    // Queue of packets coming from server
+    let input_queue: Arc<Mutex<VecDeque<IncomingPacket>>> = Arc::new(Mutex::new(VecDeque::new()));
+
+    // Setup the websocket
+    let in_q = input_queue.clone();
+    tokio::spawn(create_socket(out_rx, in_q));
 
     // Change this to OpenGL::V2_1 if not working.
     let opengl = OpenGL::V3_2;
@@ -48,26 +50,8 @@ async fn main() {
         .build()
         .unwrap();
 
-    let outgoing_queue: Arc<Mutex<VecDeque<OutgoingPackets>>> = Arc::new(Mutex::new(VecDeque::new()));
-
-
     // Create a new game and run it.
-    let mut app = App {
-        gl: GlGraphics::new(opengl),
-        grid: (2..22)
-            .map(|a| {
-                (1..13)
-                    .map(|b| match (a * b) % 4 {
-                        0 => util::Tile::Empty,
-                        1 => util::Tile::Blue,
-                        2 => util::Tile::Green,
-                        3 => util::Tile::Red,
-                        _ => util::Tile::Empty,
-                    })
-                    .collect()
-            })
-            .collect(),
-    };
+    let mut app = App::new(GlGraphics::new(opengl), out_tx, input_queue).await;
 
     let mut events = Events::new(EventSettings::new());
 
@@ -77,7 +61,7 @@ async fn main() {
         }
 
         if let Some(args) = e.update_args() {
-            app.update(&args);
+            app.update(&args).await;
         }
     }
 }

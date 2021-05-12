@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use futures::FutureExt;
-use crate::packets::incoming::IncomingPacket::InvalidPacket;
 use std::panic::{set_hook, take_hook};
 
 #[derive(Serialize, Deserialize)]
@@ -36,7 +35,7 @@ pub enum IncomingPacket {
     MoveActivePacket { x: i32, y: i32 },
     RotateActivePacket {},
     ScoreUpdatePacket { score: i32 },
-    InvalidPacket {source: String},
+    InvalidPacket { response: String },
 }
 
 impl IncomingPacket {
@@ -93,7 +92,7 @@ impl IncomingPacket {
                     score: packet.score.unwrap(),
                 },
                 _ => Self::InvalidPacket {
-                    source: packet_src.to_string()
+                    response: packet_src.to_string()
                 },
             }
         }.catch_unwind().await;
@@ -102,9 +101,11 @@ impl IncomingPacket {
 
         match result {
             Ok(e) => e,
-            _ => { Self::InvalidPacket {
-                source: packet_src.to_string()
-            }}
+            _ => {
+                Self::InvalidPacket {
+                    response: packet_src.to_string()
+                }
+            }
         }
     }
 }

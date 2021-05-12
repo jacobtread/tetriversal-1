@@ -1,18 +1,18 @@
 #[derive(Clone, Debug)]
-pub enum OutgoingPackets {
+pub enum OutgoingPacket {
     KeepAlivePacket {},
     JoinRequestPacket { name: String },
     CInputPacket { key: String },
     DisconnectPacket { reason: String },
 }
 
-impl OutgoingPackets {
+impl OutgoingPacket {
     pub fn id(&self) -> i32 {
         match self {
-            OutgoingPackets::KeepAlivePacket {} => 0,
-            OutgoingPackets::JoinRequestPacket { name: _ } => 1,
-            OutgoingPackets::CInputPacket { key: _ } => 2,
-            OutgoingPackets::DisconnectPacket { reason: _ } => 3,
+            OutgoingPacket::KeepAlivePacket {} => 0,
+            OutgoingPacket::JoinRequestPacket { name: _ } => 1,
+            OutgoingPacket::CInputPacket { key: _ } => 2,
+            OutgoingPacket::DisconnectPacket { reason: _ } => 3,
         }
     }
 }
