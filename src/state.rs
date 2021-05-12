@@ -1,6 +1,6 @@
-use opengl_graphics::GlGraphics;
-use piston::RenderArgs;
 use crate::util::Tile;
+use opengl_graphics::GlGraphics;
+use piston::{RenderArgs, UpdateArgs};
 
 pub struct App {
     gl: GlGraphics,
