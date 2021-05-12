@@ -1,9 +1,9 @@
----
+------------------------------------------------------------------------------------
 
 <div style="text-align:center"><img src="logo.png" alt="Tetriversal logo"/></div>
 <p style="text-align: center; font-weight: bold">The multiplayer tetris game</p>
 
----
+------------------------------------------------------------------------------------
 
 This is a game developed by myself and [Jaocbtread](https://github.com/jacobtread) for our multiplayer DGT project.
 
