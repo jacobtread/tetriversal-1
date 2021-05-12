@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------------
 
 <p align="center"><img src="logo.png" alt="Tetriversal logo"/></p>
-<p align="center"><strong>The multiplayer tetris game</strong></p>
+<h2 align="center">The multiplayer tetris game</h2>
 
 ------------------------------------------------------------------------------------
 
