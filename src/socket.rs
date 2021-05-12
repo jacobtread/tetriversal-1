@@ -11,24 +11,36 @@ use serde::Serialize;
 use futures_util::{future, pin_mut, StreamExt};
 
 pub async fn create_socket(outbound_stream: Receiver<OutgoingPackets>, mut inbound_stream: Sender<String>) {
-    tokio::spawn(async {
-        info!("Connecting to websocket");
+    info!("Connecting to websocket");
 
-        let url = Url::parse("ws://echo.websocket.org/").unwrap();
-        let (socket, _) = tokio_tungstenite::connect_async(url).await.unwrap();
-        let (mut tx, rx) = socket.split();
+    let url = Url::parse("ws://echo.websocket.org/").unwrap();
+    let (socket, _) = tokio_tungstenite::connect_async(url).await.unwrap();
+    let (mut tx, rx) = socket.split();
 
-        let out_channel = outbound_stream.map(|e| Message::Text(serde_json::to_string(&OutboundPacket::from(e)).unwrap()))
-            .map(Ok)
-            .forward(tx);
+    let out_channel = outbound_stream.map(|e|
+        Message::Text(
+            serde_json::to_string(&OutboundPacket::from(e))
+                .unwrap())
+    )
+        .map(Ok)
+        .forward(tx);
 
-        let in_channel = rx.for_each(|f| async move {
-            info!("{:?}", f.unwrap());
-        });
 
-        pin_mut!(out_channel, in_channel);
-        future::select(out_channel, in_channel).await;
+    let in_channel = rx.for_each(|f| {
+        async move {
+            match f.unwrap() {
+                Message::Text(s) => {
+                    let incoming_packet = IncomingPacket::deserialize(&s).await;
+                    info!("{:?}", incoming_packet);
+                }
+                Message::Close(_) => {}
+                _ => {}
+            }
+        }
     });
+
+    pin_mut!(out_channel, in_channel);
+    future::select(out_channel, in_channel).await;
 }
 
 #[derive(Serialize)]
@@ -39,35 +51,35 @@ struct OutboundPacket {
     #[serde(skip_serializing_if = "Option::is_none")]
     key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    reason: Option<String>
+    reason: Option<String>,
 }
 
 impl From<OutgoingPackets> for OutboundPacket {
     fn from(packet: OutgoingPackets) -> Self {
-        match packet  {
+        match packet {
             OutgoingPackets::KeepAlivePacket {} => Self {
                 id: 0,
                 name: None,
                 key: None,
-                reason: None
+                reason: None,
             },
             OutgoingPackets::JoinRequestPacket { name } => Self {
                 id: 1,
                 name: Some(name),
                 key: None,
-                reason: None
+                reason: None,
             },
             OutgoingPackets::CInputPacket { key } => Self {
                 id: 2,
                 name: None,
                 key: Some(key),
-                reason: None
+                reason: None,
             },
-            OutgoingPackets::DisconnectPacket { reason} => Self {
+            OutgoingPackets::DisconnectPacket { reason } => Self {
                 id: 3,
                 name: None,
                 key: None,
-                reason: Some(reason)
+                reason: Some(reason),
             },
         }
     }

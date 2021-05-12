@@ -26,10 +26,9 @@ pub mod socket;
 #[tokio::main]
 async fn main() {
     init_log();
-    let async_runtime = tokio::runtime::Runtime::new().unwrap();
     let (mut out_tx, out_rx) = channel(1024);
     let (in_tx, in_rx) = channel(1024);
-    let aws = async_runtime.spawn(create_socket(out_rx, in_tx));
+    tokio::spawn(create_socket(out_rx, in_tx));
 
     out_tx.send(OutgoingPackets::JoinRequestPacket {
         name: "no".to_string()
