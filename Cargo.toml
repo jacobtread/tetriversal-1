@@ -7,20 +7,30 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# Pistion
 piston = "0.53.0"
 piston2d-graphics = "0.40.0"
 pistoncore-glutin_window = "0.69.0"
 piston2d-opengl_graphics = "0.78.0"
-tokio-tungstenite = "*"
-url = "*"
+
+# WebSockets
+tokio-tungstenite = "0.14.0"
+url = "2.2.2"
+
+# Async
+futures = "0.3.15"
+futures-util = "0.3.15"
 tokio = { version = "1.5.0", features = ["full"] }
-futures = "*"
-serde = {version = "*", features = ["derive"]}
-serde_json = "*"
-native-dialog = "*"
-log = "0.4"
-async-log = "*"
-env_logger = "*"
-colored = "*"
-chrono = "*"
-futures-util = "*"
+
+# Serilisation
+serde = {version = "1.0.125", features = ["derive"]}
+serde_json = "1.0.64"
+
+# Logging
+log = "0.4.14"
+env_logger = "0.8.3"
+async-log = "2.0.0"
+
+# Util
+colored = "2.0.0"
+chrono = "0.4.19"
