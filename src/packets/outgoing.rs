@@ -1,3 +1,4 @@
+#[derive(Clone, Debug)]
 pub enum OutgoingPackets {
     KeepAlivePacket {},
     JoinRequestPacket { name: String },

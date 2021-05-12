@@ -11,12 +11,16 @@ piston = "0.53.0"
 piston2d-graphics = "0.40.0"
 pistoncore-glutin_window = "0.69.0"
 piston2d-opengl_graphics = "0.78.0"
-async-tungstenite = {version = "0.13", features = ['tokio-runtime']}
+tokio-tungstenite = "*"
+url = "*"
 tokio = { version = "1.5.0", features = ["full"] }
 futures = "*"
 serde = {version = "*", features = ["derive"]}
 serde_json = "*"
 native-dialog = "*"
 log = "0.4"
+async-log = "*"
 env_logger = "*"
 colored = "*"
+chrono = "*"
+futures-util = "*"

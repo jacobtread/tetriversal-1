@@ -1,3 +1,5 @@
+pub mod logging;
+
 #[derive(Clone, Debug)]
 pub enum Tile {
     Red,

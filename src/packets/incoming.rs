@@ -14,7 +14,8 @@ struct BasePacket {
     score: Option<i32>,
 }
 
-pub enum IncommingPacket {
+#[derive(Clone, Debug)]
+pub enum IncomingPacket {
     KeepAlivePacket {},
     JoinResponsePacket { uuid: String },
     JoinFailurePacket { reason: String },
@@ -35,7 +36,7 @@ pub enum IncommingPacket {
     InvaldPacket {},
 }
 
-impl From<&String> for IncommingPacket {
+impl From<&String> for IncomingPacket {
     fn from(packet_src: &String) -> Self {
         let packet: BasePacket = serde_json::from_str(packet_src.as_str()).unwrap();
         match packet.id {

@@ -3,45 +3,41 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
 
-use async_tungstenite::tokio::connect_async;
-use async_tungstenite::tungstenite::Message;
-use colored::*;
-use futures::prelude::*;
 use glutin_window::GlutinWindow as Window;
 use log::{debug, error, info};
 use opengl_graphics::{GlGraphics, OpenGL};
 use packets::outgoing::OutgoingPackets;
 use piston::event_loop::{EventSettings, Events};
-use piston::input::{RenderEvent, UpdateEvent};
 use piston::window::WindowSettings;
 use state::App;
 use std::collections::VecDeque;
-use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
+use crate::util::logging::init_log;
+use piston::{RenderEvent, UpdateEvent};
+use crate::socket::create_socket;
+use futures::channel::mpsc::channel;
+use futures::{SinkExt, StreamExt};
 
 pub mod packets;
 pub mod state;
 pub mod util;
+pub mod socket;
 
 #[tokio::main]
 async fn main() {
-    std::env::set_var("RUST_LOG", "trace");
-    env_logger::builder()
-        .format(|buf, record| {
-            writeln!(
-                buf,
-                "[{}]: {}",
-                match record.level() {
-                    log::Level::Error => "  ERROR  ".red().bold(),
-                    log::Level::Warn => " WARNING ".yellow().bold(),
-                    log::Level::Info => "  INFO   ".green().bold(),
-                    log::Level::Debug => "  DEBUG  ".blue().bold(),
-                    log::Level::Trace => "  TRACE  ".white().bold(),
-                },
-                record.args()
-            )
-        })
-        .init();
+    init_log();
+    let async_runtime = tokio::runtime::Runtime::new().unwrap();
+    let (mut out_tx, out_rx) = channel(1024);
+    let (in_tx, in_rx) = channel(1024);
+    let aws = async_runtime.spawn(create_socket(out_rx, in_tx));
+
+    out_tx.send(OutgoingPackets::JoinRequestPacket {
+        name: "no".to_string()
+    }).await;
+
+    // in_rx.for_each(|e| async move {
+    //     info!("{}", e);
+    // }).await;
 
     // Change this to OpenGL::V2_1 if not working.
     let opengl = OpenGL::V3_2;
@@ -55,28 +51,6 @@ async fn main() {
 
     let outgoing_queue: Arc<Mutex<VecDeque<OutgoingPackets>>> = Arc::new(Mutex::new(VecDeque::new()));
 
-    tokio::spawn(async move {
-        info!("Connecting to websocket");
-
-        let (mut stream, _) = match connect_async("ws://echo.websocket.org").await {
-            Ok(val) => val,
-            Err(e) => {
-                error!("Error connecting to WebSocket\n{}", e);
-                return;
-            }
-        };
-
-        info!("Connected to websocket");
-
-        stream.send(Message::Text("Hentai".to_string())).await.unwrap();
-        let msg = stream
-            .next()
-            .await
-            .ok_or("Didn't receive anything")
-            .unwrap()
-            .unwrap();
-        debug!("msg: {}", msg);
-    });
 
     // Create a new game and run it.
     let mut app = App {
