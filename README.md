@@ -5,10 +5,10 @@
 
 ------------------------------------------------------------------------------------
 
-This is a game developed by myself and [Jaocbtread](https://github.com/jacobtread) for our multiplayer DGT project.
+This is a game developed by myself and [Jacobtread](https://github.com/jacobtread) for our multiplayer DGT project.
 
 ## Gameplay
-Its just tetris, but every couple of seconds, a new player is chosen to controll the game, the modes 
+Its just tetris, but every couple of seconds, a new player is chosen to control the game, the modes 
 have not been quite figured out yet, due to the game being very wip.
 
 ## Architecture
